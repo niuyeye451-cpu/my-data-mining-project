@@ -1,0 +1,13 @@
+ASOS 电商数据挖掘爬虫系统本项目是一个基于 Docker 容器化部署的高级网页爬虫系统，专门针对 ASOS 网站进行商品数据的自动化挖掘。系统采用 Selenium 无头浏览器绕过高级反爬机制，并结合 MySQL 数据库实现高可靠的“生产者-消费者”任务队列模型。🌟 核心特性强力反爬突破：采用 Chrome 最新的 --headless=new 模式，结合 CDP (Chrome DevTools Protocol) 深度抹除 WebDriver 机器人特征，有效规避 ASOS 的反爬拦截。容器化部署 (Docker)：环境完美隔离，内置完整的 Linux Chrome 依赖，彻底解决本地环境配置的“依赖地狱”。数据库任务队列：摒弃传统的文件存储，将抓取流程切分为“链接发现”和“详情抓取”两步。通过 MySQL 的 status 字段实现断点续爬，即使中途断网也不会丢失进度。丰富的商品维度：不仅抓取标题、价格、品牌和颜色，还深度解析提取商品的高清主图（Image URL）与详细描述。📁 项目结构📦 project1
+ ┣ 📜 Dockerfile             # 爬虫镜像构建脚本（含换源与 Chrome 安装）
+ ┣ 📜 docker-compose.yml     # 容器编排文件，统筹数据库与爬虫任务
+ ┣ 📜 init.sql               # MySQL 数据库初始化建表脚本
+ ┣ 📜 task1.py               # (基础) 抓取网站首页男女装分类链接
+ ┣ 📜 task2.py               # (生产者) 遍历分类页，将商品 URL 批量存入数据库
+ ┗ 📜 task3.py               # (消费者) 从数据库读取待抓取 URL，爬取详情及图片后更新入库
+🛠️ 技术栈语言: Python 3.10核心库: Selenium, mysql-connector-python数据库: MySQL 8.0环境隔离: Docker & Docker Compose🚀 快速启动指南1. 启动数据库服务首先需要启动 MySQL 容器。初次启动时，Docker 会自动读取 init.sql 创建 asos_db 数据库和表结构。docker compose up -d db
+(提示：首次启动请等待约 10-15 秒，确保 MySQL 完成初始化建表。)2. 运行链接收割任务 (Task 2)负责访问商品列表页（如打折裙装），提取所有单品的 URL，并作为“待处理任务”存入数据库。docker compose run --rm task2
+运行结束后，容器会自动销毁，不占用系统资源。3. 运行详情抓取任务 (Task 3)爬虫会从数据库中查找状态为 0 (待抓取) 的链接，逐一访问商品详情页，提取价格、品牌、高清大图等信息，并将数据库状态更新为 1 (已完成)。docker compose run --rm task3
+📊 数据库设计 (asos_dresses)字段名数据类型说明idINT自增主键product_codeVARCHAR(50)商品唯一编号 (提取自 URL)urlTEXT商品详情页链接titleVARCHAR(255)商品名称priceVARCHAR(50)当前价格brandVARCHAR(100)品牌名称colourVARCHAR(50)颜色descriptionTEXT详细描述image_urlTEXT高清主图直链statusTINYINT核心状态字段：0=待抓取，1=抓取成功，2=抓取失败scrape_timeTIMESTAMP数据最后更新时间💡 进阶使用与维护1. 多线程/多终端并发提速得益于数据库的队列设计，你可以同时打开多个终端窗口，运行多次 docker compose run --rm task3。它们会自动消费数据库中不同的未抓取链接，极大提升抓取速度。2. 数据查看与导出推荐使用 DBeaver 或 Navicat 连接数据库查看战果：主机：localhost端口：3306用户名：root密码：rootpassword(注：如果连接报错，请在连接设置的驱动属性中将 allowPublicKeyRetrieval 设为 TRUE)3. 环境清理 (释放 C 盘/硬盘空间)Docker 在频繁构建后会产生悬空镜像，建议定期执行以下命令清理垃圾：docker system prune
+如果需要彻底重置数据库（注意：会丢失所有抓取数据！）：docker compose down -v
+Powered by Selenium & Docker. Happy Data Mining! 🚀

@@ -1,0 +1,65 @@
+services:
+  # ==========================================
+  # 数据库服务：MySQL
+  # ==========================================
+  db:
+    image: mysql:8.0
+    container_name: asos_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: asos_db
+    ports:
+      - "3306:3306" # 映射到宿主机，方便你用 DBeaver 连接
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      # 👉 重点：不要用 /mnt/e/... 而是用一个名字
+      - mysql_data:/var/lib/mysql
+
+  # ==========================================
+  # 任务 1：爬取首页男女装分类链接
+  # ==========================================
+  task1:
+    image: asos-scraper
+    volumes:
+      - ./task1.py:/app/task1.py
+      - "/mnt/e/数据挖掘爬取数据/project1:/app/data"
+    environment:
+      - http_proxy=http://host.docker.internal:7897
+      - https_proxy=http://host.docker.internal:7897
+      - no_proxy=localhost,127.0.0.1
+    command: python task1.py
+
+  # ==========================================
+  # 任务 2：批量爬取打折裙装商品链接
+  # ==========================================
+  task2:
+    image: asos-scraper
+    volumes:
+      - ./task2.py:/app/task2.py
+      - "/mnt/e/数据挖掘爬取数据/project1:/app/data"
+    environment:
+      - http_proxy=http://host.docker.internal:7897
+      - https_proxy=http://host.docker.internal:7897
+      - no_proxy=localhost,127.0.0.1
+    command: python task2.py
+
+  # ==========================================
+  # 任务 3：爬取商品详情并存入数据库
+  # ==========================================
+  task3:
+    image: asos-scraper
+    depends_on:
+      - db # 确保数据库先启动
+    volumes:
+      - ./task3.py:/app/task3.py
+      - "/mnt/e/数据挖掘爬取数据/project1:/app/data"
+    environment:
+      - http_proxy=http://host.docker.internal:7897
+      - https_proxy=http://host.docker.internal:7897
+      # 注意：这里把 db 加入了 no_proxy 白名单，防止连不上数据库
+      - no_proxy=localhost,127.0.0.1,db 
+    # 使用 -u 参数强制输出日志，方便调试
+    command: python -u task3.py
+
+volumes:
+  mysql_data:
