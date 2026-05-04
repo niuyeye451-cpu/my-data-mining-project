@@ -1,0 +1,7 @@
+services:
+  train:
+    build: .
+    volumes:
+      - ./dataset(1):/app/dataset
+      - ./sample_data:/app/sample_data
+      - ./output:/app/output
