@@ -10,5 +10,7 @@ CREATE TABLE IF NOT EXISTS asos_dresses (
     brand VARCHAR(100),
     colour VARCHAR(50),
     description TEXT,
-    scrape_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    image_url TEXT,
+    status TINYINT DEFAULT 0,
+    scrape_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

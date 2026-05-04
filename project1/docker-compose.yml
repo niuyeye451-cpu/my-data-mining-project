@@ -9,24 +9,26 @@ services:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: asos_db
     ports:
-      - "3306:3306" # 映射到宿主机，方便你用 DBeaver 连接
+      - "3306:3306"
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-      # 👉 重点：不要用 /mnt/e/... 而是用一个名字
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   # ==========================================
   # 任务 1：爬取首页男女装分类链接
   # ==========================================
   task1:
     image: asos-scraper
+    depends_on:
+      - db
     volumes:
       - ./task1.py:/app/task1.py
-      - "/mnt/e/数据挖掘爬取数据/project1:/app/data"
-    environment:
-      - http_proxy=http://host.docker.internal:7897
-      - https_proxy=http://host.docker.internal:7897
-      - no_proxy=localhost,127.0.0.1
+      - ./data:/app/data
     command: python task1.py
 
   # ==========================================
@@ -34,13 +36,11 @@ services:
   # ==========================================
   task2:
     image: asos-scraper
+    depends_on:
+      - db
     volumes:
       - ./task2.py:/app/task2.py
-      - "/mnt/e/数据挖掘爬取数据/project1:/app/data"
-    environment:
-      - http_proxy=http://host.docker.internal:7897
-      - https_proxy=http://host.docker.internal:7897
-      - no_proxy=localhost,127.0.0.1
+      - ./data:/app/data
     command: python task2.py
 
   # ==========================================
@@ -49,16 +49,11 @@ services:
   task3:
     image: asos-scraper
     depends_on:
-      - db # 确保数据库先启动
+      db:
+        condition: service_healthy
     volumes:
       - ./task3.py:/app/task3.py
-      - "/mnt/e/数据挖掘爬取数据/project1:/app/data"
-    environment:
-      - http_proxy=http://host.docker.internal:7897
-      - https_proxy=http://host.docker.internal:7897
-      # 注意：这里把 db 加入了 no_proxy 白名单，防止连不上数据库
-      - no_proxy=localhost,127.0.0.1,db 
-    # 使用 -u 参数强制输出日志，方便调试
+      - ./data:/app/data
     command: python -u task3.py
 
 volumes:
