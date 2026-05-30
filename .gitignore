@@ -30,3 +30,14 @@ checkpoints/
 
 # 操作系统文件
 .DS_Store
+
+# 教师参考代码 / 原始资料（不提交）
+project4/teacher/
+project4/空调负荷预测/
+project4/venv/
+
+# 模型文件过大，不提交
+project4/output/models/
+
+# 实验输出图片需要提交
+!project4/output/*.png
