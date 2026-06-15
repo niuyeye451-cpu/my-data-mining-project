@@ -1,0 +1,42 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: gyy-mysql
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: gyy
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./data/init_data.sql:/docker-entrypoint-initdb.d/01_init.sql
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  elasticsearch:
+    build:
+      context: .
+      dockerfile: Dockerfile.es
+    container_name: gyy-es
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 40s
+
+volumes:
+  mysql_data:
+  es_data:

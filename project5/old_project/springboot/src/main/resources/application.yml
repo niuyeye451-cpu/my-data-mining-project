@@ -1,0 +1,26 @@
+#spring:
+#  datasource:
+#  driver-class-name: com.mysql.jdbc.Driver
+#  url = jdbc: mysql://localhost:3306/lucene?useUnicode=true&characterEncoding=utf8&useSSL=false
+#  username: root
+#  password:
+#
+## 整合 mybatis
+#mybatis:
+#  type-aliases-package: com.lzz.pojo
+#  mapper-locations: classpath:mapper/*.xml
+#
+## mybatis-plus 配置
+#mybatis-plus:
+#  configuration:
+#    # 设置 log 日志输出 可以选择多种配置输出 org.apache.ibatis.logging.slf4j.Slf4jImpl
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#  # 配置 mapper 使用的类的路径
+#  type-aliases-package: com.lzz.**.pojo
+#  # mapper文件位置
+#  mapper-locations: classpath:/mapper/*.xml
+#  global-config:
+#    db-config:
+#      # 全局逻辑删除字段 数据库中逻辑删除字段和对应实体中字段名是什么 这里就写什么
+#      # 而且对应实体类中的对应字段需要添加注解 @TableLogic
+#      logic-delete-field: is_delete  # 全局逻辑删除的实体字段名(since 3.3.0,配置后可以忽略不配置步骤2)
